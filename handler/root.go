@@ -1,8 +1,9 @@
 package handler
 
 import "github.com/gin-gonic/gin"
+import "todo_list_demo/service"
 
-func NewRouter(service ...interface{}) *gin.Engine {
+func NewRouter(services ...interface{}) *gin.Engine {
 	r := gin.Default()
 
 	v1 := r.Group("/api/v1")
@@ -15,6 +16,10 @@ func NewRouter(service ...interface{}) *gin.Engine {
 				"msg":  "success form todo_lsit_demo",
 			})
 		})
+
+		v1.POST("/create", service.Create)
+
+		v1.DELETE("/task/:id", service.DeleteById)
 	}
 	return r
 }
