@@ -11,4 +11,5 @@ type Task struct {
 	StartTime string // 开始时间
 	EndTime   string // 结束时间
 	Finish    int    // 是否完成
+	Num       int    // 优先级
 }

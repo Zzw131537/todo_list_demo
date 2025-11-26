@@ -17,6 +17,8 @@ type TaskService struct {
 	EndTime   string `json:"end_time" form:"end_time"`
 	Type      int    `json:"type" form:"type"`
 	Finish    int    `json:"finish" form:"finish"`
+	Sort      int    `json:"sort" form:"sort"`
+	Num       int    `json:"num" form:"num"`
 }
 
 func Create(ctx *gin.Context) {
@@ -72,12 +74,71 @@ func (service *TaskService) Delete(ctx context.Context, id string) interface{} {
 
 }
 
+func (service *TaskService) UpdateFindish(ctx context.Context) gin.H {
+	err := model.DB.Model(&model.Task{}).Update("finish", service.Finish).Error
+	if err != nil {
+		return gin.H{
+			"code": 500,
+			"msg":  err.Error(),
+		}
+	} else {
+		return gin.H{
+			"code": 200,
+			"msg":  "success",
+		}
+	}
+}
+
+func (service *TaskService) ListTasks(ctx context.Context) gin.H {
+	tasks := make([]model.Task, 0)
+	if service.Sort == 0 { // 默认顺序
+		model.DB.Model(&model.Task{}).Find(&tasks).Where("type = ?", service.Type)
+	} else if service.Sort == 1 { // 按截止时间进行排序
+		model.DB.Model(&model.Task{}).Find(&tasks).Where("type = ?", service.Type).Order("end_time asc")
+	} else if service.Sort == 2 { // 按优先级进行排序
+		model.DB.Model(&model.Task{}).Find(&tasks).Where("type = ?", service.Type).Order("num desc ")
+	}
+
+	return gin.H{
+		"code": 200,
+		"msg":  "success",
+		"data": tasks,
+	}
+
+}
+
 func DeleteById(c *gin.Context) {
 	service := new(TaskService)
 	if err := c.ShouldBind(&service); err == nil {
 		res := service.Delete(c.Request.Context(), c.Param("id"))
 		c.JSON(200, res)
 
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": 400,
+			"msg":  err.Error(),
+		})
+	}
+}
+
+func BookTask(c *gin.Context) {
+	service := new(TaskService)
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.UpdateFindish(c.Request.Context())
+		c.JSON(200, res)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": 400,
+			"msg":  err.Error(),
+		})
+	}
+}
+
+func ListTasks(c *gin.Context) {
+	service := new(TaskService)
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.ListTasks(c.Request.Context())
+		c.JSON(200, res)
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,

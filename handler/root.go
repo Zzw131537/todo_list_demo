@@ -20,6 +20,10 @@ func NewRouter(services ...interface{}) *gin.Engine {
 		v1.POST("/create", service.Create)
 
 		v1.DELETE("/task/:id", service.DeleteById)
+
+		v1.POST("/task/book", service.BookTask)
+
+		v1.GET("/task/list", service.ListTasks)
 	}
 	return r
 }
