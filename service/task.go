@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 	"todo_list_demo/model"
 
 	"github.com/gin-gonic/gin"
@@ -107,6 +108,12 @@ func (service *TaskService) ListTasks(ctx context.Context) gin.H {
 
 }
 
+func (service *TaskService) ListByTime(ti string) []model.Task {
+	var tasks []model.Task
+	model.DB.Model(&model.Task{}).Find(&tasks).Where("create_time = ?", ti).Order("create_time asc")
+	return tasks
+}
+
 func DeleteById(c *gin.Context) {
 	service := new(TaskService)
 	if err := c.ShouldBind(&service); err == nil {
@@ -145,4 +152,25 @@ func ListTasks(c *gin.Context) {
 			"msg":  err.Error(),
 		})
 	}
+}
+
+// 实现提醒通知功能
+func Notice(c context.Context) {
+	ticker := time.NewTicker(1 * time.Minute)
+	for {
+		select {
+		case <-ticker.C:
+			ti := time.Now().Format("2006-01-02 15:04:05")
+			service := new(TaskService)
+			// 得到要通知的任务
+			tasks := service.ListByTime(ti)
+			// 进行通知
+			ToNotice(tasks)
+		}
+	}
+
+}
+
+func ToNotice(tasks []model.Task) {
+
 }
